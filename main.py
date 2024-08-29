@@ -21,20 +21,6 @@ class Chat(BaseModel):
     room_id: str
     message: str
 
-
-
-# @app.get('/')    # urls
-# def read_root():  #views
-#     return {'hello':'world'}
-
-# @app.get('/index')
-# def index():
-#     return {'asdf':'asdf'}
-
-# @app.get('/items/{item_id}')
-# def read_item(item_id: int):
-#     return {'item_id':item_id}
-
 @app.post('/user')
 def create_user(user: User):
     table = connection.table('user')
@@ -69,7 +55,7 @@ def get_user(user_id: str):
 def create_chatroom(chatroom: Chatroom):
     table = connection.table('chatroom')
     chatroom_id = chatroom.room_name
-    table.put(chatroom_id, {'info:room _name':chatroom.room_name})
+    table.put(chatroom_id, {'info:room_name':chatroom.room_name})
     return { 'chatroom_id': chatroom_id, 'room_name':chatroom.room_name}
 
 @app.post('/chat')
@@ -82,31 +68,30 @@ def create_chat(chat: Chat):
     table.put(chat_id, {
         'info:user_id': chat.user_id,
         'info:room_id': chat.room_id,
-        'info:nessage': chat.message,
+        'info:message': chat.message,
     })
 
     return {
         'chat_id': chat_id,
         'user_id': chat.user_id,
         'room_id': chat.room_id,
-        'massage': chat.message,
+        'message': chat.message,
     }
 
 @app.get('/chatroom/{room_id}')
 def get_chatroom(room_id: str):
     table = connection.table('chat')
+    
+    rows = table.scan(filter=f"SingleColumnValueFilter('info', 'room_id', =, 'binary:{room_id}')")
 
-    table.scan(filter=f"SingleColumnValueFilter('info', 'room_id', =, 'binary:{room_id}')")
-    
-    
-    chat = []
+    chats = []
 
     for k,v in rows:
         chats.append({
             'chat_id': k,
             'room_id': v[b'info:room_id'],
             'user_id': v[b'info:user_id'],
-            'massage': v[b'info:massage'],
+            'message': v[b'info:message'],
         })
 
     return chats
